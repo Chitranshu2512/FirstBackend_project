@@ -1,0 +1,11 @@
+{
+  "name": "firstbackend_project",
+  "version": "1.0.0",
+  "description": "this is our first backend project under the guidence of Hitesh Choudhary sir",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chitranshu Kushwaha",
+  "license": "ISC"
+}
