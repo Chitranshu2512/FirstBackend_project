@@ -73,16 +73,20 @@ export const registerUser = asyncHandler(async(req, res) => {
     if(existedUser) throw new ApiError(409, "User with email or username already exist")
 
     const avatarLocalPath = req.files?.avatar[0]?.path
+    //investigate what does the req.files holds
+    console.log("req.file's data: ",req.files)
+    console.log("req.file.avatar's data: ",req.files.avatar)
+    
     const coverImageLocalPath = req.files?.coverImage[0]?.path
 
 
     if(!avatarLocalPath) throw new ApiError(400, "Avatar file is required");
-    else console.log("Avatar found: ", avatarLocalPath)
+    
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
 
     if(!avatar) throw new ApiError(400, "Avatar file is required");
-    else console.log("avatar uploaded on cloud")
+    
 
     const user = await User.create({
         fullName,
@@ -104,6 +108,7 @@ export const registerUser = asyncHandler(async(req, res) => {
         new ApiResponse(200, createdUser, "user registered successfully")
     )
 })
+
 
 export const loginUser = asyncHandler(async(req, res) => {
     // Steps to login a user
