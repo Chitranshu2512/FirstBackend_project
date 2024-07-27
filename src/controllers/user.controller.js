@@ -10,11 +10,11 @@ const generateAccessAndRefreshToken = async(userId) => {
     try {
         const user = await User.findById(userId)
         const accessToken = user.generateAccessToken()
-        const refershToken = user.generateRefreshToken()
+        const refreshToken = user.generateRefreshToken()
 
-        user.refershToken = refershToken
+        user.refershToken = refreshToken
         await user.save({validateBeforeSave: false})
-        return {accessToken, refershToken}
+        return {accessToken, refreshToken}
         
     } catch (error) {
         throw new ApiError(500, "something went wrong while generating tokens")
@@ -120,7 +120,8 @@ export const loginUser = asyncHandler(async(req, res) => {
 
     const {email, userName, password} = req.body
     // if credentials are blank
-    if(!userName || !email){
+    console.log(userName, email)
+    if(!userName && !email){
         throw new ApiError(400, "username or email is required")
     }
     // find user based on email or userName
@@ -136,14 +137,40 @@ export const loginUser = asyncHandler(async(req, res) => {
     // decrypt the password and check
     const isPasswordValid = user.isPasswordCorrect(password)
 
-    // if wrong password
+    // check password
     if(!isPasswordValid){
         throw new ApiError(404, "Bad Credentials")
     }
 
     // generate Access and refresh token
-    const {accessToken, refershToken} = await generateAccessAndRefreshToken(user._id)
-    
+    const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
+
+    /*  
+    NOW:- 
+    we will have to fetch the user again bcoz refresh token has been added so our prev 'user' variable was not having refresh token as the time of variable declaration.
+
+    if we want to save one DB query to save our time then we can update the refreshToken field in our 'user' variable itself (eg:- user.refreshToken = refreshToken)
+
+    but if one new DB query is not expensive for your website then its recommended to get the updated user from the database
+    */
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    // declare a option obj to send it with cookies as response
+    const options = {
+        httpOnly: true,
+        secure: true    // these two properties define that cookie is only modifiable from the server, not client
+    }
+
+
+    // finally if all things are good then send the response back to the user with the "access and refresh token" as the cookies
+
+
+    return res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+        new ApiResponse(200, {loggedInUser,accessToken,refreshToken}, "user logged in successfully")
+    )  // its is good to send some respone(JSON data) to the user, it may be useful for him.
 
 })
 
