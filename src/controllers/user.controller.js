@@ -181,3 +181,7 @@ export const greetUser = asyncHandler((req, res) => {
     })
 })
 
+export const logout = asyncHandler(async(req, res) => {
+    
+})
+
