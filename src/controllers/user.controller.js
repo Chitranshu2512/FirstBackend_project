@@ -21,7 +21,7 @@ const generateAccessAndRefreshToken = async(userId) => {
     }
 }
 
-
+// register controller
 export const registerUser = asyncHandler(async(req, res) => {
 
 // STEPS TO REGISTER A USER:-
@@ -110,6 +110,7 @@ export const registerUser = asyncHandler(async(req, res) => {
 })
 
 
+// login controller
 export const loginUser = asyncHandler(async(req, res) => {
     // Steps to login a user
     // get credentials from the frontend (userName or Email)
@@ -175,13 +176,32 @@ export const loginUser = asyncHandler(async(req, res) => {
 })
 
 
-export const greetUser = asyncHandler((req, res) => {
-    res.send({
-        message: "we registered a new user successfully"
-    })
-})
-
+// logout controller
 export const logout = asyncHandler(async(req, res) => {
-    
+
+    // as this controller will have the access after execution of auth middleware in which we are adding a user obj inside req obj. so here we can access that user obj
+
+
+    // clear the refresh token store in the database
+    await User.findByIdAndUpdate(req.user._id, 
+        {   
+            // this is special mmongoDB syntax to find and uodate at a same time
+            $set: {refershToken : undefined}
+        },
+        {
+            new: true
+        }
+    )
+
+    const options = {
+        httpOnly: true,
+        secure: true 
+    }
+
+    // clear the cookies stored in the user's browser and send the response back to user
+    return res.status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "user logged out"))    
 })
 

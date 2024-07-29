@@ -1,9 +1,12 @@
 import { Router } from "express";
-import { registerUser, greetUser, loginUser } from "../controllers/user.controller.js";
+import { registerUser, loginUser, logout } from "../controllers/user.controller.js";
 import {upload}  from "../middlewares/multer.middelware.js"
+import { verifyJWTToken } from "../middlewares/auth.middleware.js";
 
+// create a router instance from express
 const router = Router();
 
+// implement register route
 router.route("/register").post(
     upload.fields([
         {
@@ -17,9 +20,12 @@ router.route("/register").post(
     ]),
     registerUser)
 
-
+// login route
 router.route("/login").post(loginUser)
-router.route("/greet").get(greetUser) 
+
+// logout route
+router.route("/logout").post(verifyJWTToken, logout)
+
 
 // router.route("/register"): This specifies that the following HTTP method will be associated with the /register route.
 
