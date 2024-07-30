@@ -5,7 +5,6 @@ import { User } from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 
 
-
 const generateAccessAndRefreshToken = async(userId) => {
     try {
         const user = await User.findById(userId)
@@ -120,8 +119,8 @@ export const loginUser = asyncHandler(async(req, res) => {
 
 
     const {email, userName, password} = req.body
+
     // if credentials are blank
-    console.log(userName, email)
     if(!userName && !email){
         throw new ApiError(400, "username or email is required")
     }
@@ -205,3 +204,44 @@ export const logout = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, {}, "user logged out"))    
 })
 
+
+// refreshToken Controller
+export const refreshAccessToken = asyncHandler(async(req, res) => {
+    
+    //get the refreshToken from the req obj
+    const incomingRefreshToken = req.cookie?.refreshToken || req.body.refreshToken
+
+    // if req obj does not carry refresh token
+    if(!incomingRefreshToken){
+        throw new ApiError(401, "unauthorized request")
+    }
+    // deocde the token
+    const decodedToken = JWT.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+
+    // find a user (if exist) with id that decodeToken has in the payload section 
+    const user = User.findById(decodedToken._id)
+
+    // if user not exist with that id 
+    if(!user){
+        throw new ApiError(401, "Invalid refresh Token")
+    }
+
+    // if user found, then match the saved refresh Token with incomingtoken then generate the new Tokens
+    if(incomingRefreshToken != user.refershToken){{
+        throw new ApiError(401, "unauthorized request")
+    }}
+
+    const {accessToken, newRefreshToken} = await  generateAccessAndRefreshToken(user._id);
+
+    const options = {
+        httpOnly: true,
+        secure: true 
+    }
+    res.status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken",newRefreshToken , options)
+    .json(new ApiResponse(200, {accessToken, refreshToken: newRefreshToken }, 
+        "Access token refreshed"
+    ))
+
+})

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, logout } from "../controllers/user.controller.js";
+import { registerUser, loginUser, logout, refreshAccessToken } from "../controllers/user.controller.js";
 import {upload}  from "../middlewares/multer.middelware.js"
 import { verifyJWTToken } from "../middlewares/auth.middleware.js";
 
@@ -25,6 +25,8 @@ router.route("/login").post(loginUser)
 
 // logout route
 router.route("/logout").post(verifyJWTToken, logout)
+
+router.route("/refresh-token").post(refreshAccessToken)
 
 
 // router.route("/register"): This specifies that the following HTTP method will be associated with the /register route.
