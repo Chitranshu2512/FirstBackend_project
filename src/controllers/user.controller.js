@@ -5,6 +5,7 @@ import { User } from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 
 
+// tokens generator method
 const generateAccessAndRefreshToken = async(userId) => {
     try {
         const user = await User.findById(userId)
@@ -243,5 +244,64 @@ export const refreshAccessToken = asyncHandler(async(req, res) => {
     .json(new ApiResponse(200, {accessToken, refreshToken: newRefreshToken }, 
         "Access token refreshed"
     ))
+
+})
+
+
+// change password controller
+export const changePassword = asyncHandler(async(req, res) => {
+    const {oldPassword, newPassword, confimPassword} = req.body
+
+    if(newPassword !== confimPassword){
+        throw new ApiError(400, "new password and confirm password are different")
+    }
+
+    // Find the user details from DB
+    const user = await User.findById(req.user?._id);
+    
+    // check if old password is correct or not
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    // if oldPassword is not correct
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Invalid Old Password")
+    }
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave: false});
+
+    return res.status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
+
+
+//get Current user controller
+export const getCurrentUser = asyncHandler(async(req, res) => {
+    return res.status(200).json(new ApiResponse(200, req.user, "user fetched successfully"))
+})
+
+
+// update user detail controller
+export const updateAccountDetails = asyncHandler(async(req, res) => {
+    const {fullName, email} = req.body
+
+    // check if data is there in req or not
+    if(!fullName || !email){
+        throw new ApiError(400, "All fields  are required")
+    }
+
+
+    // find the user in the DB and update the details
+    const user = await User.findByIdAndUpdate(req.user._id,
+        {
+            $set: {fullName, email}
+        },
+        {
+            new: true
+        }
+    ).select("-password")
+
+    return res.status(200).json(new ApiResponse(200, user, "details updated successfully"))
+
 
 })

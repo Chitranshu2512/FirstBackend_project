@@ -27,7 +27,7 @@ export const verifyJWTToken = asyncHandler(async(req, res, next) => {
     
     
         // if user from that id is not in DB that means token does not clear the authenticity 
-        if(!decodedToken){
+        if(!user){
             throw new ApiError(401, "invalid access token")
         }
     
